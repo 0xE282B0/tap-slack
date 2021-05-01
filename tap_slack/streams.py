@@ -6,6 +6,8 @@ import singer
 from singer import metadata, utils
 from singer.utils import strptime_to_utc
 
+import types
+import itertools
 from tap_slack.transform import transform_json
 
 LOGGER = singer.get_logger()
@@ -149,7 +151,7 @@ class ConversationMembersStream(SlackStream):
         # pylint: disable=unused-variable
         with singer.metrics.job_timer(job_type='list_conversation_members') as timer:
             with singer.metrics.record_counter(endpoint=self.name) as counter:
-                for channel in self.channels():
+                for channel in itertools.chain.from_iterable(self.channels()):
                     channel_id = channel.get('id')
 
                     members_cursor = self.client.get_channel_members(channel_id)
@@ -224,7 +226,7 @@ class ConversationHistoryStream(SlackStream):
         # pylint: disable=unused-variable
         with singer.metrics.job_timer(job_type='list_conversation_history') as timer:
             with singer.metrics.record_counter(endpoint=self.name) as counter:
-                for channel in self.channels():
+                for channel in itertools.chain.from_iterable(self.channels()):
                     channel_id = channel.get('id')
 
                     bookmark_date = self.get_bookmark(channel_id, self.config.get('start_date'))
